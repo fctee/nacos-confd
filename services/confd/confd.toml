@@ -1,0 +1,23 @@
+# 设置使用的后端
+backend = "nacos"
+# confd配置文件的路径
+confdir = "/etc/confd"
+# confd记录日志的级别
+log-level = "info"
+# 后端轮询间隔时间,单位为秒
+interval = 3
+# 启用监视支持
+watch = true
+# 是否只执行一次
+onetime = false
+# 启用noop模式 处理所有模板资源;跳过目标更新
+noop = false
+# 添加到键前的字符串前缀
+prefix = "/"
+# 同步时不执行 check_cmd 和 reload_cmd
+sync-only = false
+
+# nacos后端节点列表
+nodes = [
+  "http://127.0.0.1:8848",
+]

@@ -1,0 +1,14 @@
+[Unit]
+Description=Confd Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/confd -config-file /etc/confd/confd.toml
+Restart=on-failure
+StandardOutput=append:/var/log/confd-output.log
+StandardError=append:/var/log/confd-error.log
+
+[Install]
+WantedBy=multi-user.target

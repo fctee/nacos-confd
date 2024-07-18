@@ -1,0 +1,17 @@
+[Unit]
+Description=Loki logging service
+After=network.target
+
+[Service]
+Type=simple
+
+ExecStart=/data/loki/loki-linux-amd64 -config.file=/data/loki/loki-local-config.yaml
+StandardOutput=append:/data/loki/loki.log
+StandardError=append:/data/loki/loki.error.log
+Restart=on-failure
+SuccessExitStatus=0
+LimitNOFILE=65536
+SyslogIdentifier=loki
+
+[Install]
+WantedBy=multi-user.target
