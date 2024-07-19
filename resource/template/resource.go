@@ -19,10 +19,10 @@ import (
 	"time"
 
 	"github.com/Risingtao/nacos-confd/backends"
-	"github.com/Risingtao/nacos-confd/crypt/encoding/secconf"
+	"github.com/Risingtao/nacos-confd/depends/crypt/encoding/secconf"
 	"github.com/Risingtao/nacos-confd/log"
-	"github.com/Risingtao/nacos-confd/memkv"
-	"github.com/Risingtao/nacos-confd/toml"
+	"github.com/Risingtao/nacos-confd/depends/memkv"
+	"github.com/Risingtao/nacos-confd/depends/toml"
 	"github.com/Risingtao/nacos-confd/util"
 )
 
@@ -429,7 +429,7 @@ func (t *TemplateResource) sendSyncNotification() error {
     logLine := fmt.Sprintf("IP: %s - 配置同步通知", ip)
 
     // 异步发送日志到Loki，不等待结果
-    go SendLogToLoki("http://loki.xjsj.com:3100/loki/api/v1/push", labels, logLine)
+    go SendLogToLoki("http://127.0.0.1:3100/loki/api/v1/push", labels, logLine)
 
     return nil
 }

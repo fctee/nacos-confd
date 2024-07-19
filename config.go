@@ -1,54 +1,49 @@
-package main
-
+// 导入必要的包
 import (
-	"errors"
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"net"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
+	"flag" // 用于解析命令行参数
+	"io/ioutil" // 用于读取文件内容
+	"os" // 操作系统相关功能，如文件操作
+	"path/filepath" // 用于处理文件路径
 
-	"github.com/Risingtao/nacos-confd/backends"
-	"github.com/Risingtao/nacos-confd/log"
-	"github.com/Risingtao/nacos-confd/resource/template"
-	"github.com/Risingtao/nacos-confd/toml"
+	// 导入项目内部的包
+	"github.com/Risingtao/nacos-confd/backends" // 后端配置相关
+	"github.com/Risingtao/nacos-confd/log" // 日志处理
+	"github.com/Risingtao/nacos-confd/resource/template" // 模板处理
+	"github.com/Risingtao/nacos-confd/depends/toml" // TOML配置解析
 )
 
+// 定义模板配置和后端配置的类型别名
 type TemplateConfig = template.Config
 type BackendsConfig = backends.Config
 
-// A Config structure is used to configure confd.
+// 定义全局配置结构体
 type Config struct {
-	TemplateConfig
-	BackendsConfig
-	Interval      int    `toml:"interval"`
-	SecretKeyring string `toml:"secret_keyring"`
-	SRVDomain     string `toml:"srv_domain"`
-	SRVRecord     string `toml:"srv_record"`
-	LogLevel      string `toml:"log-level"`
-	Watch         bool   `toml:"watch"`
-	PrintVersion  bool
-	ConfigFile    string
-	OneTime       bool
+	TemplateConfig // 模板配置
+	BackendsConfig // 后端配置
+	Interval      int    `toml:"interval"` // 轮询间隔时间
+	SecretKeyring string `toml:"secret_keyring"` // 密钥环路径
+	SRVDomain     string `toml:"srv_domain"` // 服务域名
+	SRVRecord     string `toml:"srv_record"` // 服务记录
+	LogLevel      string `toml:"log-level"` // 日志级别
+	Watch         bool   `toml:"watch"` // 是否启用监听
+	PrintVersion  bool   // 是否打印版本信息
+	ConfigFile    string // 配置文件路径
+	OneTime       bool   // 是否只运行一次
 }
 
+// 全局变量config用于存储配置信息
 var config Config
 
+// init函数用于初始化命令行参数
 func init() {
+	// 使用flag包定义命令行参数
 	flag.StringVar(&config.AuthToken, "auth-token", "", "Auth bearer token to use")
 	flag.StringVar(&config.Backend, "backend", "etcd", "backend to use")
-	flag.BoolVar(&config.BasicAuth, "basic-auth", false, "Use Basic Auth to authenticate (only used with -backend=consul and -backend=etcd)")
 	flag.StringVar(&config.ClientCaKeys, "client-ca-keys", "", "client ca keys")
 	flag.StringVar(&config.ClientCert, "client-cert", "", "the client cert")
 	flag.StringVar(&config.ClientKey, "client-key", "", "the client key")
-	flag.BoolVar(&config.ClientInsecure, "client-insecure", false, "Allow connections to SSL sites without certs (only used with -backend=etcd)")
 	flag.StringVar(&config.ConfDir, "confdir", "/etc/confd", "confd conf directory")
 	flag.StringVar(&config.ConfigFile, "config-file", "/etc/confd/confd.toml", "the confd config file")
-	flag.Var(&config.YAMLFile, "file", "the YAML file to watch for changes (only used with -backend=file)")
-	flag.StringVar(&config.Filter, "filter", "*", "files filter (only used with -backend=file)")
 	flag.IntVar(&config.Interval, "interval", 600, "backend polling interval")
 	flag.BoolVar(&config.KeepStageFile, "keep-stage-file", false, "keep staged files")
 	flag.StringVar(&config.LogLevel, "log-level", "", "level which confd should log messages")
@@ -59,19 +54,8 @@ func init() {
 	flag.BoolVar(&config.PrintVersion, "version", false, "print version and exit")
 	flag.StringVar(&config.Scheme, "scheme", "http", "the backend URI scheme for nodes retrieved from DNS SRV records (http or https)")
 	flag.StringVar(&config.SecretKeyring, "secret-keyring", "", "path to armored PGP secret keyring (for use with crypt functions)")
-	flag.StringVar(&config.SRVDomain, "srv-domain", "", "the name of the resource record")
-	flag.StringVar(&config.SRVRecord, "srv-record", "", "the SRV record to search for backends nodes. Example: _etcd-client._tcp.example.com")
 	flag.BoolVar(&config.SyncOnly, "sync-only", false, "sync without check_cmd and reload_cmd")
 	flag.StringVar(&config.AuthType, "auth-type", "", "Vault auth backend type to use (only used with -backend=vault)")
-	flag.StringVar(&config.AppID, "app-id", "", "Vault app-id to use with the app-id backend (only used with -backend=vault and auth-type=app-id)")
-	flag.StringVar(&config.UserID, "user-id", "", "Vault user-id to use with the app-id backend (only used with -backend=value and auth-type=app-id)")
-	flag.StringVar(&config.RoleID, "role-id", "", "Vault role-id to use with the AppRole, Kubernetes backends (only used with -backend=vault and either auth-type=app-role or auth-type=kubernetes)")
-	flag.StringVar(&config.SecretID, "secret-id", "", "Vault secret-id to use with the AppRole backend (only used with -backend=vault and auth-type=app-role)")
-	flag.StringVar(&config.Path, "path", "", "Vault mount path of the auth method (only used with -backend=vault)")
-	flag.StringVar(&config.Table, "table", "", "the name of the DynamoDB table (only used with -backend=dynamodb)")
-	flag.StringVar(&config.Separator, "separator", "", "the separator to replace '/' with when looking up keys in the backend, prefixed '/' will also be removed (only used with -backend=redis)")
-	flag.StringVar(&config.Username, "username", "", "the username to authenticate as (only used with vault and etcd backends)")
-	flag.StringVar(&config.Password, "password", "", "the password to authenticate with (only used with vault and etcd backends)")
 	flag.StringVar(&config.Endpoint, "endpoint", "", "the endpoint in nacos (only used with nacos backends)")
 	flag.StringVar(&config.Group, "group", "DEFAULT_GROUP", "the group in nacos (only used with nacos backends)")
 	flag.StringVar(&config.Namespace, "namespace", "", "the namespace in nacos (only used with nacos backends)")
@@ -82,31 +66,28 @@ func init() {
 	flag.BoolVar(&config.Watch, "watch", false, "enable watch support")
 }
 
-// initConfig initializes the confd configuration by first setting defaults,
-// then overriding settings from the confd config file, then overriding
-// settings from environment variables, and finally overriding
-// settings from flags set on the command line.
-// It returns an error if any.
+// initConfig函数用于初始化配置信息
 func initConfig() error {
+	// 检查配置文件是否存在
 	_, err := os.Stat(config.ConfigFile)
 	if os.IsNotExist(err) {
 		log.Debug("Skipping confd config file.")
 	} else {
 		log.Debug("Loading " + config.ConfigFile)
+		// 读取配置文件内容
 		configBytes, err := ioutil.ReadFile(config.ConfigFile)
 		if err != nil {
 			return err
 		}
 
+		// 解析TOML格式的配置文件内容到config结构体
 		_, err = toml.Decode(string(configBytes), &config)
 		if err != nil {
 			return err
 		}
 	}
 
-	// Update config from environment variables.
-	processEnv()
-
+	// 如果指定了密钥环路径，则读取密钥环内容
 	if config.SecretKeyring != "" {
 		kr, err := os.Open(config.SecretKeyring)
 		if err != nil {
@@ -119,91 +100,23 @@ func initConfig() error {
 		}
 	}
 
+	// 如果指定了日志级别，则设置日志级别
 	if config.LogLevel != "" {
 		log.SetLevel(config.LogLevel)
 	}
 
-	if config.SRVDomain != "" && config.SRVRecord == "" {
-		config.SRVRecord = fmt.Sprintf("_%s._tcp.%s.", config.Backend, config.SRVDomain)
-	}
-
-	// Update BackendNodes from SRV records.
-	if config.Backend != "env" && config.SRVRecord != "" {
-		log.Info("SRV record set to " + config.SRVRecord)
-		srvNodes, err := getBackendNodesFromSRV(config.SRVRecord)
-		if err != nil {
-			return errors.New("Cannot get nodes from SRV records " + err.Error())
-		}
-
-		switch config.Backend {
-		case "etcd":
-			vsm := make([]string, len(srvNodes))
-			for i, v := range srvNodes {
-				vsm[i] = config.Scheme + "://" + v
-			}
-			srvNodes = vsm
-		}
-
-		config.BackendNodes = srvNodes
-	}
+	// 如果没有指定后端节点，则根据后端类型设置默认节点
 	if len(config.BackendNodes) == 0 {
 		switch config.Backend {
 		case "nacos":
 			config.BackendNodes = []string{"127.0.0.1:8848"}
 		}
 	}
-	// Initialize the storage client
+
 	log.Info("Backend set to " + config.Backend)
 
-	if config.Watch {
-		unsupportedBackends := map[string]bool{
-			"dynamodb": true,
-			"ssm":      true,
-		}
-
-		if unsupportedBackends[config.Backend] {
-			log.Info(fmt.Sprintf("Watch is not supported for backend %s. Exiting...", config.Backend))
-			os.Exit(1)
-		}
-	}
-
-	if config.Backend == "dynamodb" && config.Table == "" {
-		return errors.New("No DynamoDB table configured")
-	}
+	// 设置配置文件和模板文件的目录路径
 	config.ConfigDir = filepath.Join(config.ConfDir, "conf.d")
 	config.TemplateDir = filepath.Join(config.ConfDir, "templates")
 	return nil
-}
-
-func getBackendNodesFromSRV(record string) ([]string, error) {
-	nodes := make([]string, 0)
-
-	// Ignore the CNAME as we don't need it.
-	_, addrs, err := net.LookupSRV("", "", record)
-	if err != nil {
-		return nodes, err
-	}
-	for _, srv := range addrs {
-		host := strings.TrimRight(srv.Target, ".")
-		port := strconv.FormatUint(uint64(srv.Port), 10)
-		nodes = append(nodes, net.JoinHostPort(host, port))
-	}
-	return nodes, nil
-}
-
-func processEnv() {
-	cakeys := os.Getenv("CONFD_CLIENT_CAKEYS")
-	if len(cakeys) > 0 && config.ClientCaKeys == "" {
-		config.ClientCaKeys = cakeys
-	}
-
-	cert := os.Getenv("CONFD_CLIENT_CERT")
-	if len(cert) > 0 && config.ClientCert == "" {
-		config.ClientCert = cert
-	}
-
-	key := os.Getenv("CONFD_CLIENT_KEY")
-	if len(key) > 0 && config.ClientKey == "" {
-		config.ClientKey = key
-	}
 }
