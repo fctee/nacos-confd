@@ -9,14 +9,7 @@ nacos-confd 是一个基于 Nacos 的配置管理工具，用于动态更新和�
 - 可配置的处理间隔
 - 优雅的错误处理和信号处理
 
-## 安装
-
-```bash
-go get github.com/Risingtao/nacos-confd
-```
-
-### 使用说明
-
+## 使用说明
 1. 配置 nacos-confd：
    创建一个配置文件（例如 config.toml），设置必要的参数如 Nacos 服务器地址、命名空间等。
 
@@ -62,7 +55,7 @@ keys = [
 1. 克隆仓库：
 
    ```bash
-   git clone https://github.com/Risingtao/nacos-confd.git
+   git clone https://github.com/fctee/nacos-confd.git
    ```
 
 2. 安装依赖：
