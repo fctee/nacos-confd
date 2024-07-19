@@ -18,13 +18,17 @@ nacos-confd 是一个基于 Nacos 的配置管理工具，用于动态更新和�
    ```bash
    nacos-confd -config config.toml
    ```
-
    常用命令行参数：
-   -config: 指定配置文件路径
-   -onetime: 一次性处理模式
-   -interval: 设置轮询间隔（秒）
-   -watch: 启用文件变化监听模式
-   -version: 打印版本信息
+
+   - config: 指定配置文件路径
+
+   - onetime: 一次性处理模式
+
+   - interval: 设置轮询间隔（秒）
+
+   - watch: 启用文件变化监听模式
+
+   - version: 打印版本信息
 
 3. 模板配置：
    在 /etc/confd/templates 目录下创建模板文件，使用 Go 模板语法。
