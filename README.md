@@ -13,29 +13,36 @@ nacos-confd 是一个基于 Nacos 的配置管理工具，用于动态更新和�
 
 ```bash
 go get github.com/Risingtao/nacos-confd
+```
 
-使用说明
-配置 nacos-confd：
-创建一个配置文件（例如 config.toml），设置必要的参数如 Nacos 服务器地址、命名空间等。
+### 使用说明
 
-运行 nacos-confd：
+1. 配置 nacos-confd：
+   创建一个配置文件（例如 config.toml），设置必要的参数如 Nacos 服务器地址、命名空间等。
 
-Bash
-nacos-confd -config config.toml
-常用命令行参数：
+2. 运行 nacos-confd：
 
--config: 指定配置文件路径
--onetime: 一次性处理模式
--interval: 设置轮询间隔（秒）
--watch: 启用文件变化监听模式
--version: 打印版本信息
-模板配置：
-在 /etc/confd/templates 目录下创建模板文件，使用 Go 模板语法。
+   ```bash
+   nacos-confd -config config.toml
+   ```
 
-后端配置：
-在 /etc/confd/conf.d 目录下创建后端配置文件，指定模板源和目标路径。
+   常用命令行参数：
 
-配置示例
+   -config: 指定配置文件路径
+   -onetime: 一次性处理模式
+   -interval: 设置轮询间隔（秒）
+   -watch: 启用文件变化监听模式
+   -version: 打印版本信息
+
+3. 模板配置：
+   在 /etc/confd/templates 目录下创建模板文件，使用 Go 模板语法。
+
+4. 后端配置：
+   在 /etc/confd/conf.d 目录下创建后端配置文件，指定模板源和目标路径。
+
+### 配置示例
+
+```toml
 Toml
 [nacos]
 server_addr = "localhost:8848"
@@ -48,17 +55,24 @@ keys = [
     "/config/database",
     "/config/cache"
 ]
-开发
-克隆仓库：
-
-Bash
-git clone https://github.com/Risingtao/nacos-confd.git
-安装依赖：
-
-Bash
-go mod tidy
-构建项目：
-
-Bash
-go build
 ```
+
+### 开发
+
+1. 克隆仓库：
+
+   ```bash
+   git clone https://github.com/Risingtao/nacos-confd.git
+   ```
+
+2. 安装依赖：
+
+   ```bash
+   go mod tidy
+   ```
+
+3. 构建项目：
+
+   ```bash
+   go build
+   ```
