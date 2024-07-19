@@ -20,7 +20,6 @@ nacos-confd 是一个基于 Nacos 的配置管理工具，用于动态更新和�
    ```
 
    常用命令行参数：
-
    -config: 指定配置文件路径
    -onetime: 一次性处理模式
    -interval: 设置轮询间隔（秒）
