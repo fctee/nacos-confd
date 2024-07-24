@@ -8,15 +8,16 @@ nacos-confd 是一个基于 Nacos 的配置管理工具，用于动态更新和�
 - 支持一次性处理和持续监听模式
 - 可配置的处理间隔
 - 优雅的错误处理和信号处理
+- 支持发送配置变更通知到loki
 
 ## 使用说明
 1. 配置 nacos-confd：
-   创建一个配置文件（例如 config.toml），设置必要的参数如 Nacos 服务器地址、命名空间等。
+   创建一个配置文件(参考services/confd)，设置必要的参数如 Nacos 服务器地址、命名空间等。也可使用supervisord管理nacos-confd进程。(参考services/supervisord)
 
 2. 运行 nacos-confd：
 
    ```bash
-   nacos-confd -config config.toml
+   nacos-confd -config confd.toml
    ```
    常用命令行参数：
 
